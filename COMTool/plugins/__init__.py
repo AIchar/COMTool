@@ -4,7 +4,7 @@ from .import terminal
 from . import graph
 # from . import myplugin
 
-pluginClasses = [dbg.Plugin, protocol.Plugin, terminal.Plugin, graph.Plugin]
+pluginClasses = [dbg.Plugin, protocol.Plugin, terminal.Plugin]
 # pluginClasses.append(myplugin.Plugin)
 
 builtinPlugins = {}
