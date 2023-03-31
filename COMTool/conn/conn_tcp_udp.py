@@ -48,14 +48,14 @@ class TCP_UDP(COMM):
         default = {
             "protocol" : "tcp",
             "mode" : "client",
-            "target" : ["127.0.0.1:2345", ["127.0.0.1:2345"]],
+            "target" : ["127.0.0.1", ["127.0.0.1"]],
             "port": 2345,
             "auto_reconnect": False,
             "auto_reconnect_interval": 1.0
         }
         for k in default:
-            if not k in self.config:
-                self.config[k] = default[k]
+            # if not k in self.config:
+            self.config[k] = default[k]
         self.widgetConfMap = {
             "protocol" : None,
             "mode" : None,
@@ -218,8 +218,8 @@ class TCP_UDP(COMM):
             else:
                 self.targetCombobox.show()
                 self.targetLabel.show()
-                self.porttEdit.hide()
-                self.portLabel.hide()
+                self.porttEdit.show()
+                self.portLabel.show()
                 self.clientsCombobox.hide()
                 self.disconnetClientBtn.hide()
                 self.autoReconnect.show()
@@ -274,7 +274,7 @@ class TCP_UDP(COMM):
         text = self.porttEdit.text()
         while 1:
             try:
-                port = int(text)
+                self.config["port"] = int(text)
                 break
             except Exception:
                 text = text[:-1]
@@ -410,7 +410,7 @@ class TCP_UDP(COMM):
         if not target:
             return None
         host = target
-        port = 80
+        port = self.config["port"]
         target = target.replace("：", ":")
         if target.endswith(":"):
             target = target[:-1]
