@@ -7,7 +7,7 @@ locales=["en", "zh_CN", "zh_TW", "ja"]
 
 
 root_dir = os.path.abspath(os.path.dirname(__file__))
-locale = "en"
+locale = "zh_CN"
 
 tr = lambda x:x
 

@@ -56,7 +56,7 @@ class Parameters:
     config = {
         "version": 3,
         "skin": "light",
-        "locale": "en",
+        "locale": "zh_CN",
         "encoding": "UTF-8",
         "skipVersion": None,
         "connId": "serial",
