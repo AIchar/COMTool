@@ -54,8 +54,8 @@ class TCP_UDP(COMM):
             "auto_reconnect_interval": 1.0
         }
         for k in default:
-            # if not k in self.config:
-            self.config[k] = default[k]
+            if not k in self.config:
+                self.config[k] = default[k]
         self.widgetConfMap = {
             "protocol" : None,
             "mode" : None,
@@ -100,7 +100,30 @@ class TCP_UDP(COMM):
     def onUiInitDone(self):
         for key in self.config:
             self.setSerialConfig(key, self.widgetConfMap[key], self.config[key])
-
+            
+        if self.config["protocol"] == "tcp":
+            self.modeClientRadioBtn.show()
+            self.modeServerRadioBtn.show()
+            self.modeLabel.show()
+            self.protoclTcpRadioBtn.setChecked(True)
+            self.changeMode(self.config["mode"], init=True)
+            self.widget.adjustSize()
+        else:
+            self.targetCombobox.show()
+            self.targetLabel.show()
+            self.porttEdit.show()
+            self.portLabel.show()
+            self.clientsCombobox.hide()
+            self.disconnetClientBtn.hide()
+            self.autoReconnect.hide()
+            self.autoReconnectIntervalEdit.hide()
+            self.autoReconnetLable.hide()
+            self.modeClientRadioBtn.hide()
+            self.modeServerRadioBtn.hide()
+            self.modeLabel.hide()
+            self.protoclUdpRadioBtn.setChecked(True)
+            self.widget.adjustSize()
+    
     def onWidget(self):
         serialSetting = QWidget()
         self.serialSettingsLayout = QGridLayout()
@@ -185,6 +208,7 @@ class TCP_UDP(COMM):
                 self.modeServerRadioBtn.show()
                 self.modeLabel.show()
                 self.changeMode(self.config["mode"], init=True)
+                self.widget.adjustSize()
             else:
                 self.targetCombobox.show()
                 self.targetLabel.show()
@@ -502,7 +526,7 @@ class TCP_UDP(COMM):
                 flush = True
                 try:
                     if protocolIsTcp:
-                        data = conn.recv(4096)
+                        data = conn.recv(1460)
                         # ignore not selected target's msg
                         if modeIsServer and self.serverModeSelectedClient and (remoteStr != self.serverModeSelectedClient):
                             data = None
