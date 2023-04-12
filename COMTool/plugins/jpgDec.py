@@ -291,6 +291,7 @@ class Plugin(Plugin_Base):
                 self.pack_length = 0
                 self.pack_cnt = 0
                 self.frame_data = []
+                self.pack_recv_cnt = 0
 
             org_len = len(data)
 
@@ -301,17 +302,21 @@ class Plugin(Plugin_Base):
                     
                 self.frame_data.append((self.pack_cnt, data[4:org_len]))
                 self.pack_cnt = packet_index
+                self.pack_recv_cnt += 1
 
                 if eof_flag == 1:
-                    sorted_packets = sorted(self.frame_data, key=lambda x:x[0])
-                    data = b''
-                    for packet in sorted_packets:
-                        data += packet[1]
-                    self.frame_data = []
-                    self.fps += 1
-                    self.updateSignal.emit("jpeg", data)
+                    if self.pack_recv_cnt != pack_total_count:
+                        print('.')
+                    else:
+                        sorted_packets = sorted(self.frame_data, key=lambda x:x[0])
+                        data = b''
+                        for packet in sorted_packets:
+                            data += packet[1]
+                        self.frame_data = []
+                        self.fps += 1
+                        self.updateSignal.emit("jpeg", data)
             elif self.last_fram_index == frame_index and self.pack_cnt+1 != packet_index:
-                self.lost_pack_num = packet_index - self.pack_cnt
+                self.lost_pack_num += (packet_index - self.pack_cnt)
                 self.pack_cnt = packet_index
     
     def onReceived(self, data : bytes):
