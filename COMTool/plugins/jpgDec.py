@@ -47,12 +47,25 @@ class Plugin(Plugin_Base):
                 self.config[k] = default[k]
         print("jpgDec init")
         self.last_fram_index = 0
-
+        self.lost_frame_num = 0
+        self.frame_complete = [0] * 256
+        self.data_len = 0
+    
     def jpgDebug(self):
         while 1:
             self.fps_label.setText('Fps:' + str(self.fps))
             self.fps = 0
-            self.lost_label.setText('lost pack:' + str(self.lost_pack_num))
+            self.lost_label.setText('丢包:' + str(self.lost_pack_num))
+            self.lost_frame_label.setText('丢帧:' + str(self.lost_frame_num))
+            if self.data_len >= 1024*1024:
+                speed = self.data_len/(1024*1024)
+                self.speed_label.setText(str(round(speed, 2)) + 'MB/s')
+            elif self.data_len > 1024:
+                speed = self.data_len/1024
+                self.speed_label.setText(str(round(speed, 2)) + 'kB/s')
+            else :
+                self.speed_label.setText(str(self.data_len) + 'B/s')
+            self.data_len = 0
             time.sleep(1)
 
     def onConnChanged(self, status:ConnectionStatus, msg:str):
@@ -67,22 +80,18 @@ class Plugin(Plugin_Base):
         '''
         self.widget = QWidget()
         layout = QVBoxLayout()
-        self.label = QLabel();
+        self.label = QLabel()
         self.label.setMinimumWidth(480)
         layout.setAlignment(Qt.AlignTop)
 
-        layoutDebug = QHBoxLayout()
-        self.fps_label = QLabel();
-        self.fps_label.setMaximumHeight(20)
-        self.fps_label.setMaximumWidth(50)
-        self.lost_label = QLabel("lost:");
-        layoutDebug.addWidget(self.fps_label)
-        layoutDebug.addWidget(self.lost_label)
-
+        
 
         layout.addWidget(self.label)
-        layout.addLayout(layoutDebug)
+        layout.addStretch(1)
+        # layout.addLayout(layoutDebug)
+        layout.setContentsMargins(0,10,0,0)
         self.widget.setLayout(layout)
+
 
         self.updateSignal.connect(self.updateUI)
 
@@ -132,19 +141,21 @@ class Plugin(Plugin_Base):
         audioPlayerGroupBox.setAlignment(Qt.AlignHCenter)
 
 
-        protocolLayout = QGridLayout()
+        settingLayout = QGridLayout()
         layoutProtocol = QHBoxLayout()
         protocolWidget = QWidget()
-        protocolGroupBox = QGroupBox("传输协议")
+        protocolGroupBox = QGroupBox("设置")
         protocolLabel = QLabel('协议')
         self.protoclJTcpRadioBtn = QRadioButton("TCP")
         self.protoclJUdpRadioBtn = QRadioButton("UDP")
         layoutProtocol.addWidget(self.protoclJTcpRadioBtn)
         layoutProtocol.addWidget(self.protoclJUdpRadioBtn)
+        clearBtn = QPushButton('清除计数')
         protocolWidget.setLayout(layoutProtocol)
-        protocolLayout.addWidget(protocolLabel,0,0)
-        protocolLayout.addWidget(protocolWidget,0,1,1,2)
-        protocolGroupBox.setLayout(protocolLayout)
+        settingLayout.addWidget(protocolLabel,0,0)
+        settingLayout.addWidget(protocolWidget,0,1,1,2)
+        settingLayout.addWidget(clearBtn,1,0)
+        protocolGroupBox.setLayout(settingLayout)
         protocolGroupBox.setAlignment(Qt.AlignHCenter)
         
         layout.addWidget(settingsGroupBox)
@@ -165,8 +176,37 @@ class Plugin(Plugin_Base):
         self.audioPlayerBtn.clicked.connect(self.setAudioPlay)
         self.protoclJTcpRadioBtn.clicked.connect(lambda: self.changeProtocol("tcp"))
         self.protoclJUdpRadioBtn.clicked.connect(lambda: self.changeProtocol("udp"))
+        clearBtn.clicked.connect(self.clearStatistics)
         return widget
     
+    def onWidgetStatusBar(self, parent):
+        widget = QWidget()
+        widget.setMaximumHeight(20)
+        layoutDebug = QHBoxLayout()
+        layoutDebug.setContentsMargins(0,0,0,0)
+        self.fps_label = QLabel()
+        # self.fps_label.setMaximumHeight(20)
+        # self.fps_label.setMaximumWidth(50)
+        self.lost_label = QLabel("lost:")
+        self.lost_frame_label = QLabel('lost frame:')
+        self.speed_label = QLabel('kB/s')
+        self.fps_label.setMinimumWidth(50)
+        self.lost_label.setMinimumWidth(100)
+        self.lost_frame_label.setMinimumWidth(100)
+        self.speed_label.setMinimumWidth(50)
+        layoutDebug.addWidget(self.fps_label)
+        layoutDebug.addWidget(self.lost_label)
+        layoutDebug.addWidget(self.lost_frame_label)
+        layoutDebug.addWidget(self.speed_label)
+        # layoutDebug.addStretch(1)
+        widget.setLayout(layoutDebug)
+        return widget
+
+    def clearStatistics(self):
+        self.lost_frame_num = 0
+        self.lost_pack_num = 0
+        self.data_len = 0
+
     def changeProtocol(self, protocol):
         if protocol == 'tcp':
             self.config['jpg_protocol'] = 'tcp'
@@ -287,6 +327,9 @@ class Plugin(Plugin_Base):
             header = data[0:4]
             (frame_index, eof_flag, packet_index, pack_total_count) = struct.unpack('BBBB', header)
             if self.last_fram_index != frame_index and packet_index == 1:
+                if self.last_fram_index != 0 and self.frame_complete[self.last_fram_index] == 0:
+                    self.lost_frame_num += 1
+                self.frame_complete[self.last_fram_index] = 0
                 self.last_fram_index = frame_index
                 self.pack_length = 0
                 self.pack_cnt = 0
@@ -294,7 +337,7 @@ class Plugin(Plugin_Base):
                 self.pack_recv_cnt = 0
 
             org_len = len(data)
-
+            self.data_len += org_len
             if self.last_fram_index == frame_index and self.pack_cnt+1 == packet_index:
                 
                 if eof_flag == 1 and method == 'tcp':
@@ -308,6 +351,7 @@ class Plugin(Plugin_Base):
                     if self.pack_recv_cnt != pack_total_count:
                         print('.')
                     else:
+                        self.frame_complete[self.last_fram_index] = 1
                         sorted_packets = sorted(self.frame_data, key=lambda x:x[0])
                         data = b''
                         for packet in sorted_packets:
