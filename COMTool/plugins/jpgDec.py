@@ -87,8 +87,6 @@ class Plugin(Plugin_Base):
         
 
         layout.addWidget(self.label)
-        layout.addStretch(1)
-        # layout.addLayout(layoutDebug)
         layout.setContentsMargins(0,10,0,0)
         self.widget.setLayout(layout)
 
@@ -103,17 +101,18 @@ class Plugin(Plugin_Base):
         int_validator = QIntValidator()
         int_let_validator = QRegExpValidator(QRegExp('[a-zA-Z0-9]+'))
 
-        settingsLayout = QGridLayout()
+        settingsLayout = QHBoxLayout()
         settingsGroupBox = QGroupBox("自动保存")
         self.saveJpgCheckbox = QCheckBox()
         self.saveJpgCheckbox.setToolTip('自动保存接收到的图片')
         self.jpgFilePath = QLineEdit()
+        self.jpgFilePath.setMinimumWidth(40)
         self.jpgFilePath.setReadOnly(True)
         self.jpgFileBtn = QPushButton('路径')
 
-        settingsLayout.addWidget(self.saveJpgCheckbox,1,0,1,1)
-        settingsLayout.addWidget(self.jpgFilePath,1,1,1,1)
-        settingsLayout.addWidget(self.jpgFileBtn,1,2,1,1)
+        settingsLayout.addWidget(self.saveJpgCheckbox)
+        settingsLayout.addWidget(self.jpgFilePath)
+        settingsLayout.addWidget(self.jpgFileBtn)
         settingsGroupBox.setLayout(settingsLayout)
         settingsGroupBox.setAlignment(Qt.AlignHCenter)
 
@@ -146,26 +145,25 @@ class Plugin(Plugin_Base):
         protocolWidget = QWidget()
         protocolGroupBox = QGroupBox("设置")
         protocolLabel = QLabel('协议')
+        protocolLabel.setMinimumWidth(30)
         self.protoclJTcpRadioBtn = QRadioButton("TCP")
         self.protoclJUdpRadioBtn = QRadioButton("UDP")
+        layoutProtocol.addWidget(protocolLabel)
         layoutProtocol.addWidget(self.protoclJTcpRadioBtn)
         layoutProtocol.addWidget(self.protoclJUdpRadioBtn)
         clearBtn = QPushButton('清除计数')
         protocolWidget.setLayout(layoutProtocol)
-        settingLayout.addWidget(protocolLabel,0,0)
-        settingLayout.addWidget(protocolWidget,0,1,1,2)
-        settingLayout.addWidget(clearBtn,1,0)
+        settingLayout.addWidget(protocolWidget,0,0)
+        settingLayout.addWidget(clearBtn,1,0,)
         protocolGroupBox.setLayout(settingLayout)
-        protocolGroupBox.setAlignment(Qt.AlignHCenter)
         
         layout.addWidget(settingsGroupBox)
-        layout.addWidget(audioPlayerGroupBox)
+        # layout.addWidget(audioPlayerGroupBox)
         layout.addWidget(protocolGroupBox)
 
         widget = QWidget()
         widget.setLayout(layout)
         layout.setContentsMargins(0,0,0,0)
-        widget.setMinimumWidth(300)
 
 
         #event
@@ -349,7 +347,8 @@ class Plugin(Plugin_Base):
 
                 if eof_flag == 1:
                     if self.pack_recv_cnt != pack_total_count:
-                        print('.')
+                        # print('.')
+                        pass
                     else:
                         self.frame_complete[self.last_fram_index] = 1
                         sorted_packets = sorted(self.frame_data, key=lambda x:x[0])
