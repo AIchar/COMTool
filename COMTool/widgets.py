@@ -189,7 +189,8 @@ class TitleBar(QWidget):
         self.title.setText(title)
 
 class EventFilter(QObject):
-    Margins = 5  # 边缘边距
+    Margins = 8  # 边缘边距
+    topMargins = 35  # 标题栏边距
     windows = []
     _readyToMove = False
     _moving = False
@@ -239,7 +240,7 @@ class EventFilter(QObject):
             if window.windowState() == Qt.WindowNoState:
                 window.startSystemResize(edges)
         else:
-            if window.windowState() != Qt.WindowFullScreen:
+            if window.windowState() != Qt.WindowFullScreen and pos.y() < topMargins:
                 window.startSystemMove()
 
     def eventFilter(self, obj, event):
