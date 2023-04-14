@@ -240,7 +240,7 @@ class EventFilter(QObject):
             if window.windowState() == Qt.WindowNoState:
                 window.startSystemResize(edges)
         else:
-            if window.windowState() != Qt.WindowFullScreen and pos.y() < topMargins:
+            if window.windowState() != Qt.WindowFullScreen and pos.y() < self.topMargins:
                 window.startSystemMove()
 
     def eventFilter(self, obj, event):
