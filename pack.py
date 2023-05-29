@@ -21,7 +21,7 @@ hidden_imports = [
 
 linux_out = "comtool_ubuntu_v{}.tar.xz".format(version.__version__)
 macos_out = "comtool_macos_v{}.dmg".format(version.__version__)
-windows_out = "comtool_windows_v{}.7z".format(version.__version__)
+windows_out = "dist\\comtool_windows_v{}.7z".format(version.__version__)
 
 def zip(out, path):
     out = os.path.abspath(out)
@@ -37,7 +37,7 @@ def zip_7z(out, path):
     out = os.path.abspath(out)
     cwd = os.getcwd()
     os.chdir(os.path.dirname(path))
-    ret = os.system(f"7z a -t7z -mx=9 {out} {os.path.basename(path)}")
+    ret = os.system(f"Bandizip c -l:9 -aoa -fmt:7z -t:12 {out} {os.path.basename(path)}")
     if ret != 0:
         raise Exception("7z compress failed")
     os.chdir(cwd)
