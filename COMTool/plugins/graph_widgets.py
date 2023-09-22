@@ -1,7 +1,6 @@
 # from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QSlider, QLineEdit, QGridLayout, QPushButton, QCheckBox, QHBoxLayout, QInputDialog)
 # from PyQt5.QtCore import pyqtSignal
 # from PyQt5.QtGui import QDoubleValidator
-import numpy as np
 import os
 from PyQt5.QtWidgets import (QWidget, QVBoxLayout, QLabel, QSlider, QLineEdit,
                              QGridLayout, QPushButton, QCheckBox, QHBoxLayout, QInputDialog, QComboBox, QFileDialog)
@@ -19,7 +18,7 @@ except Exception:
     from COMTool import utils
     from COMTool.widgets import EditRemarDialog
 
-from .graph_widget_metasenselite import Graph_MetaSenseLite
+# from .graph_widget_metasenselite import Graph_MetaSenseLite
 from .graph_widgets_base import Graph_Widget_Base
 import pyqtgraph as pg
 from struct import unpack, pack
@@ -48,6 +47,7 @@ class Graph_Plot(Graph_Widget_Base):
         self.plotWin.setMinimumHeight(200)
         pg.setConfigOptions(antialias=True)
         rmBtn = QPushButton(_("Remove"))
+        clearBtn = QPushButton(_("Clear"))
         rangeLabel = QLabel(_("Range:"))
         rangeConf = QLineEdit(str(self.config["xRange"]))
         rangeEnable = QCheckBox(_("Enable"))
@@ -64,6 +64,7 @@ class Graph_Plot(Graph_Widget_Base):
         rangeConf.setValidator(validator)
         self.layout.addWidget(self.plotWin, 0, 0, 1, 3)
         self.layout.addWidget(rmBtn, 1, 0, 1, 1)
+        self.layout.addWidget(clearBtn, 1, 2, 1, 1)
         self.layout.addWidget(rangeLabel, 2, 0, 1, 1)
         self.layout.addWidget(rangeConf, 2, 1, 1, 1)
         self.layout.addWidget(rangeEnable, 2, 2, 1, 1)
@@ -112,9 +113,17 @@ class Graph_Plot(Graph_Widget_Base):
             lambda: self.setHeader(headerConf.text()))
         rmBtn.clicked.connect(self.remove)
         headerConf.textChanged.connect(self.headerChanged)
+        clearBtn.clicked.connect(self.clear)
 
     def remove(self):
         self.rmCallback(self)
+
+    def clear(self):
+        self.data = {}
+        self.curves = {}
+        self.notUsedColors = self.builtinColors.copy()
+        self.colors = {}
+        self.p.clear()
 
     def setRange(self, text):
         if text:
@@ -373,5 +382,5 @@ graphWidgets = {
     Graph_Plot.id: Graph_Plot,
     Graph_Button.id: Graph_Button,
     # Graph_DragTof.id: Graph_DragTof,
-    Graph_MetaSenseLite.id: Graph_MetaSenseLite,
+    # Graph_MetaSenseLite.id: Graph_MetaSenseLite,
 }
